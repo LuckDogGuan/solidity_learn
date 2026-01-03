@@ -1,0 +1,36 @@
+# Remix IDE 默认排除
+node_modules/
+artifacts/
+cache/
+.typechain/
+hardhat-config.js
+remix-projects/
+
+# 编译输出
+*.json
+*.abi
+*.bin
+*.bytecode
+
+# 本地配置/环境文件
+.env
+.env.local
+.env.*.local
+.DS_Store
+
+# IDE/编辑器临时文件
+.remix/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日志和构建输出
+logs/
+dist/
+build/
+coverage/
+
+# 测试文件（可选）
+test/
+scripts/
