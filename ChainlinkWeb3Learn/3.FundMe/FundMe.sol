@@ -14,7 +14,7 @@ contract FundMe {
 
     // 内部使用
     AggregatorV3Interface internal dataFeed;
-    uint256 constant TARGET_VALUE = 10 * 10 ** 18; // 表示常量
+    uint256 constant TARGET_VALUE = 100 * 10 ** 18; // 表示常量
     address public ower;
 
     // 初始化
@@ -35,7 +35,8 @@ contract FundMe {
             covertEthToUsd(msg.value) >= MIN_VALUE,
             "error Sender more Eth(1ETH)"
         );
-        fundersToAmount[msg.sender] = msg.value;
+        // 添加操作
+        fundersToAmount[msg.sender] = fundersToAmount[msg.sender]+msg.value;
     }
 
     function getChainlinkDataFeedLatestAnswer() public view returns (int) {
@@ -66,14 +67,33 @@ contract FundMe {
             "TargetValue is not enough"
         );
         require(msg.sender == ower, "not owner");
-        // transfer 纯转账 ， 失败会回滚
-        payable(msg.sender).transfer(address(this).balance);
-        // send     纯转账
-        // call  带数据
-    }
+        ///1. transfer 纯转账 ， 失败会回滚
+        // payable(msg.sender).transfer(address(this).balance);
 
+        // send     纯转账 返回是否成功
+        // 2. bool success = payable(msg.sender).send(address(this).balance);
+        // require(success);
+
+        // call  带数据,可以调用其他 payable 的函数,推荐使用
+        // 3. (bool,result) = addr.call{value,value}("sendeDate");
+        bool result;
+        (result,) = payable(msg.sender).call{value:address(this).balance}("");
+        require(result,"transfer tx failed");
+        
+    }
+    // 改变所有者
     function transferOwnerShip(address newOwer) public {
         require(ower == msg.sender, "not owner");
         ower = newOwer;
+    }
+
+    function reFund()public{
+        require(covertEthToUsd(address(this).balance)<TARGET_VALUE,"Target is reached"); // 筹集到了对应的资产
+        require(fundersToAmount[msg.sender]>0,"Not have memory");
+        bool success;
+        (success,) =payable(msg.sender).call{value:fundersToAmount[msg.sender]}("reFund success");
+        require(success,"transfer tx failed");
+        // 去重，清零
+        fundersToAmount[msg.sender] = 0;
     }
 }
